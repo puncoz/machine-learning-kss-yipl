@@ -159,3 +159,6 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+
+# User Defined
+.ipynb_checkpoints
