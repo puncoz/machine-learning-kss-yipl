@@ -110,7 +110,6 @@ venv.bak/
 .idea
 
 # User-specific stuff
-.idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/dictionaries
 .idea/**/shelf
@@ -126,8 +125,6 @@ venv.bak/
 
 # Gradle
 .idea/**/gradle.xml
-.idea/**/libraries
-
 # CMake
 cmake-build-debug/
 cmake-build-release/
@@ -161,4 +158,3 @@ fabric.properties
 
 
 # User Defined
-.ipynb_checkpoints
