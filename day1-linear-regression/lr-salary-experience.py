@@ -16,11 +16,38 @@ def plot(x, y, m, c):
     plt.show()
 
 
-def compute_error(c, m, x, y):
+def mse(c, m, x, y):
     total_error = 0
     for i in range(0, len(x)):
         total_error += (y[i] - (m * x[i] + c)) ** 2
     return total_error / float(len(x))
+
+
+def sse(x, y, m, c):
+    total = 0
+    for i in range(0, len(x)):
+        total += (y[i] - (m * x[i] + c)) ** 2
+
+    return total
+
+
+def sst(x, y):
+    total = 0
+    y_mean = np.mean(y)
+    for i in range(0, len(x)):
+        total += (y[i] - y_mean) ** 2
+
+    return total
+
+
+def r_square(x, y, m, c):
+    return 1 - sse(x, y, m, c) / sst(x, y)
+
+
+def r_square_adjusted(x, y, m, c):
+    n = len(x)
+    p = 1
+    return 1 - (1 - r_square(x, y, m, c)) * ((n - 1) / (n - p - 1))
 
 
 def step_gradient(c_current, m_current, x, y, learning_rate):
@@ -38,68 +65,92 @@ def step_gradient(c_current, m_current, x, y, learning_rate):
 def calculate_m_b_with_gradient_descent(x, y, starting_m, starting_c, learning_rate, iterations):
     c_best = starting_c
     m_best = starting_m
-    err_best = compute_error(c_best, m_best, x, y)
+    err_best = mse(c_best, m_best, x, y)
+    r_sq = r_square(x, y, m_best, c_best)
+    r_sq_ad = r_square_adjusted(x, y, m_best, c_best)
 
     c_arr = np.array([c_best])
     m_arr = np.array([m_best])
     error_arr = np.array([err_best])
+    r_sq_arr = np.array([r_sq])
+    r_sq_ad_arr = np.array([r_sq_ad])
     iter_arr = np.array([0])
 
-    fig = plt.figure(figsize=(20, 4))
+    fig = plt.figure(figsize=(20, 6))
 
-    ax = fig.add_subplot(131)
+    ax = fig.add_subplot(221)
     grad, = ax.plot(c_arr, m_arr)
     ax.set(xlabel="c", ylabel="m")
-    ax.set_xlim(0, 200)
-    ax.set_ylim(0, 1000)
+    ax.set_xlim(0, 500)
+    ax.set_ylim(0, 2000)
 
-    bx = fig.add_subplot(132)
+    bx = fig.add_subplot(222)
     bx.scatter(x, y)
     lr, = bx.plot(x, linear_equation(m_best, x, c_best))
 
-    cx = fig.add_subplot(133)
+    cx = fig.add_subplot(223)
     ep, = cx.plot(iter_arr, error_arr)
     cx.set(xlabel="iterations", ylabel="error")
     cx.set_xlim(0, iterations)
     cx.set_ylim(0, 100000000)
+
+    dx = fig.add_subplot(224)
+    r2, = dx.plot(iter_arr, r_sq_arr, label="r2")
+    r2_ad, = dx.plot(iter_arr, r_sq_ad_arr, label="r2_ad")
+    dx.set(xlabel="iterations", ylabel="goodness of fit (r-squared)")
+    dx.set_xlim(0, iterations)
+    dx.set_ylim(-1, 1)
+    dx.legend()
 
     plt.ion()
     plt.show()
 
     for i in range(iterations):
         c_best, m_best = step_gradient(c_best, m_best, x, y, learning_rate)
-        err_best = compute_error(c_best, m_best, x, y)
-        # print(m_best, c_best, err_best)
+        err_best = mse(c_best, m_best, x, y)
+        r_sq = r_square(x, y, m_best, c_best)
+        r_sq_ad = r_square_adjusted(x, y, m_best, c_best)
+        print(m_best, c_best, err_best, r_sq, r_sq_ad)
 
         c_arr = np.append(c_arr, c_best)
         m_arr = np.append(m_arr, m_best)
         error_arr = np.append(error_arr, err_best)
+        r_sq_arr = np.append(r_sq_arr, r_sq)
+        r_sq_ad_arr = np.append(r_sq_ad_arr, r_sq_ad)
         iter_arr = np.append(iter_arr, i + 1)
 
         grad.set_data(c_arr, m_arr)
         lr.set_data(x, linear_equation(m_best, x, c_best))
         ep.set_data(iter_arr, error_arr)
+        r2.set_data(iter_arr, r_sq_arr)
+        r2_ad.set_data(iter_arr, r_sq_ad_arr)
         # print(np.array(range(i+2)).shape, error_arr.shape, c_arr.shape, m_arr.shape)
 
         plt.pause(0.0000000000000000001)
 
-    plt.show()
+    plt.show(block=True)
 
-    return m_best, c_best, error_arr
+    return m_best, c_best, err_best
 
 
 if __name__ == '__main__':
     initial_c = initial_m = 0
     data = pd.read_csv('experience-salary-datasets.csv')
+    x = data.experience
+    y = data.salary
 
-    # plot(data.experience, data.salary, initial_m, initial_c)
-    # print(np.array(range(14)))
-    error = compute_error(initial_c, initial_m, data.experience, data.salary)
+    # plot(x, y, initial_m, initial_c)
+    error = mse(initial_c, initial_m, x, y)
     print("Error at b = {0}, m = {1}, error = {2}".format(initial_c, initial_m, error))
 
-    learning_rate = 0.00001
+    learning_rate = 0.0001
     iterations = 1000
-    m, c, error_array = calculate_m_b_with_gradient_descent(data.experience, data.salary, initial_m, initial_c, learning_rate, iterations)
+    m, c, error = calculate_m_b_with_gradient_descent(x, y, initial_m, initial_c, learning_rate, iterations)
 
-    plt.plot(error_array)
-    plt.show()
+    # Model Evaluation - Coefficient of Determination (R-squared)
+    # i.e. goodness of fit of our regression model.
+    # https://towardsdatascience.com/coefficient-of-determination-r-squared-explained-db32700d924e
+    # R^2 = 1 - SSE / SST
+    # SSE = the sum of squared errors of our regression model
+    # SST = the sum of squared errors of our baseline model (which is worst model).
+    print("r square = {0} and r_squared_adjusted = {1}".format(r_square(x, y, m, c), r_square_adjusted(x, y, m, c)))
