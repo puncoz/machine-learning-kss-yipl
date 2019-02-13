@@ -62,7 +62,7 @@ def step_gradient(c_current, m_current, x, y, learning_rate):
     return [new_c, new_m]
 
 
-def calculate_m_b_with_gradient_descent(x, y, starting_m, starting_c, learning_rate, iterations):
+def calculate_m_b_with_gradient_descent(x, y, starting_m, starting_c, learning_rate, iterations, is_normalized):
     c_best = starting_c
     m_best = starting_m
     err_best = mse(c_best, m_best, x, y)
@@ -81,8 +81,12 @@ def calculate_m_b_with_gradient_descent(x, y, starting_m, starting_c, learning_r
     ax = fig.add_subplot(221)
     grad, = ax.plot(c_arr, m_arr)
     ax.set(xlabel="c", ylabel="m")
-    ax.set_xlim(0, 500)
-    ax.set_ylim(0, 2000)
+    if is_normalized:
+        ax.set_xlim(0, 0.01)
+        ax.set_ylim(0, 0.1)
+    else:
+        ax.set_xlim(0, 500)
+        ax.set_ylim(0, 2000)
 
     bx = fig.add_subplot(222)
     bx.scatter(x, y)
@@ -92,7 +96,7 @@ def calculate_m_b_with_gradient_descent(x, y, starting_m, starting_c, learning_r
     ep, = cx.plot(iter_arr, error_arr)
     cx.set(xlabel="iterations", ylabel="error")
     cx.set_xlim(0, iterations)
-    cx.set_ylim(0, 100000000)
+    cx.set_ylim(0, err_best)
 
     dx = fig.add_subplot(224)
     r2, = dx.plot(iter_arr, r_sq_arr, label="r2")
@@ -133,19 +137,12 @@ def calculate_m_b_with_gradient_descent(x, y, starting_m, starting_c, learning_r
     return m_best, c_best, err_best
 
 
-if __name__ == '__main__':
-    initial_c = initial_m = 0
-    data = pd.read_csv('experience-salary-datasets.csv')
-    x = data.experience
-    y = data.salary
-
+def run(initial_c, initial_m, x, y, learning_rate, iterations, is_normalized):
     # plot(x, y, initial_m, initial_c)
     error = mse(initial_c, initial_m, x, y)
     print("Error at b = {0}, m = {1}, error = {2}".format(initial_c, initial_m, error))
 
-    learning_rate = 0.0001
-    iterations = 1000
-    m, c, error = calculate_m_b_with_gradient_descent(x, y, initial_m, initial_c, learning_rate, iterations)
+    m, c, error = calculate_m_b_with_gradient_descent(x, y, initial_m, initial_c, learning_rate, iterations, is_normalized)
 
     # Model Evaluation - Coefficient of Determination (R-squared)
     # i.e. goodness of fit of our regression model.
@@ -154,3 +151,32 @@ if __name__ == '__main__':
     # SSE = the sum of squared errors of our regression model
     # SST = the sum of squared errors of our baseline model (which is worst model).
     print("r square = {0} and r_squared_adjusted = {1}".format(r_square(x, y, m, c), r_square_adjusted(x, y, m, c)))
+
+
+def run_with_normalization(data, initial_c, initial_m, learning_rate, iterations):
+    x = data.experience
+
+    y = data.salary
+    y_min = np.min(y)
+    y_max = np.max(y)
+
+    # implementing min-max scaling
+    y = data['salary'].apply(lambda salary: ((salary - y_min) / (y_max - y_min)))
+
+    run(initial_c, initial_m, x, y, learning_rate, iterations, True)
+
+
+if __name__ == '__main__':
+    initial_c = initial_m = 0
+    data = pd.read_csv('experience-salary-datasets.csv')
+    x = data.experience
+    y = data.salary
+
+    learning_rate = 0.0001
+    iterations = 1000
+
+    # run(initial_c, initial_m, x, y, learning_rate, iterations, False)
+
+    # Why, How and When to Scale (or normalize) Features
+    # https://medium.com/greyatom/why-how-and-when-to-scale-your-features-4b30ab09db5e
+    run_with_normalization(data, initial_c, initial_m, learning_rate, iterations)
