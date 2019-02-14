@@ -219,10 +219,10 @@ def distribution_plot(data):
 
 
 if __name__ == '__main__':
-    plt.interactive(False)
+    plt.interactive(True)
 
     initial_c = initial_m = 0
-    data = pd.read_csv('salaries_clean.csv', encoding='utf-8')
+    data = pd.read_csv('./salaries_clean.csv', encoding='utf-8')
 
     # Data Cleaning
     data = data[['total_experience_years', 'annual_base_pay']]
