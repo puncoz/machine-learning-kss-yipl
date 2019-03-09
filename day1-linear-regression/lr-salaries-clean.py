@@ -232,11 +232,11 @@ if __name__ == '__main__':
     data = data.replace([np.inf, -np.inf], np.nan).dropna()
 
     # ## This data has outliers
-    # plt.scatter(data.experience, data.salary)
-    # plt.show()
+    plt.scatter(data.experience, data.salary)
+    plt.show()
 
     # ## To visualize outliers, box plot is better
-    # distribution_plot(data)
+    distribution_plot(data)
 
     print("before removing outliers: ")
     print(data.describe())
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     # ## For each series in the dataframe, we could use between and quantile (or percentile) to remove outliers.
     data = OutlierRemover(data).get()
 
-    # distribution_plot(data)
+    distribution_plot(data)
 
     print("after removing outliers: ")
     print(data.describe())

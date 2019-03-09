@@ -168,6 +168,7 @@ def run_with_normalization(data, initial_c, initial_m, learning_rate, iterations
 
 if __name__ == '__main__':
     initial_c = initial_m = 0
+
     data = pd.read_csv('experience-salary-datasets.csv')
     x = data.experience
     y = data.salary
